@@ -1,6 +1,3 @@
-# StreamingAlgorithms
-IoT Stream Data Mining
-
 # Instructions
 https://docs.google.com/document/d/1wlFByExUX0jtlTYVzeq1d5gPFiDHrxmS1PrB9fll-k0/edit#
 
