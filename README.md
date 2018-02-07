@@ -1,3 +1,7 @@
+# About the project
+
+You can find a list of tasks [here](code/todo.md). Final presentation is either 12th January Monday or 13th January Tuesday. By default the former, but if we want to present on the next day, we need to say so on [this document](https://docs.google.com/document/d/1wlFByExUX0jtlTYVzeq1d5gPFiDHrxmS1PrB9fll-k0/edit?usp=sharing).
+
 # Instructions
 https://docs.google.com/document/d/1wlFByExUX0jtlTYVzeq1d5gPFiDHrxmS1PrB9fll-k0/edit#
 
