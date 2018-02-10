@@ -1,7 +1,3 @@
-# About the project
-
-You can find a list of tasks [here](code/todo.md). Final presentation is either 12th January Monday or 13th January Tuesday. By default the former, but if we want to present on the next day, we need to say so on [this document](https://docs.google.com/document/d/1wlFByExUX0jtlTYVzeq1d5gPFiDHrxmS1PrB9fll-k0/edit?usp=sharing).
-
 # Instructions
 https://docs.google.com/document/d/1wlFByExUX0jtlTYVzeq1d5gPFiDHrxmS1PrB9fll-k0/edit#
 
@@ -16,3 +12,19 @@ https://gist.github.com/nateGeorge/5455d2c57fb33c1ae04706f2dc4fee01
 
 # Slides
 https://docs.google.com/presentation/d/1ZUxHXb0-eJTDY5Auf_MVcjrwU0FI5jcnGCYjrI8TkOM/edit?usp=sharing
+
+# Summary
+
+## Evaluation
+Compare the regular Hoeffding Tree against Adaptive Random Forest
+
+### Tests
+Run Adaptive Random Forest on 2 or 3 datasets to properly illustrate the reuslts of the implementation. The datatsets availables:
+- https://github.com/scikit-multiflow/scikit-multiflow/tree/master/skmultiflow/datasets
+
+## Presentation
+To do!
+
+## More
+Optimisations: 
+- Multithreading
