@@ -258,7 +258,7 @@ class AdaptiveRandomForest(BaseClassifier):
                       
         for i in range(self.nb_ensemble):
             vote = self.ensemble[i].get_votes_for_instance(X)
-            k = np.random.poisson(self.w)
+            k = np.random.poisson(self.w, INSTANCE_WEIGHT)
             if k > 0:
                 self.ensemble[i].partial_fit(np.asarray([X]), np.asarray([y]), np.asarray([k]), self.X_seen)            
     
