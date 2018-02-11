@@ -457,6 +457,7 @@ class AdaptiveRandomForest(BaseClassifier):
 
 # In[ ]:
 
+"""
 from skmultiflow.data.generators.waveform_generator import WaveformGenerator
 from skmultiflow.classification.trees.hoeffding_tree import HoeffdingTree
 from skmultiflow.evaluation.evaluate_prequential import EvaluatePrequential
@@ -473,4 +474,5 @@ eval = EvaluatePrequential(show_plot = True, pretrain_size = 100, max_instances 
 
 # 4. Run evaluation
 eval.eval(stream = stream, classifier = adf)
+"""
 
