@@ -434,3 +434,19 @@ class AdaptiveRandomForest(BaseClassifier):
         def get_votes_for_instance(self, X):
             return self.classifier.get_votes_for_instance(X)
 
+from skmultiflow.data.generators.waveform_generator import WaveformGenerator
+from skmultiflow.classification.trees.hoeffding_tree import HoeffdingTree
+from skmultiflow.evaluation.evaluate_prequential import EvaluatePrequential
+
+# 1. Create a stream
+stream = WaveformGenerator()
+stream.prepare_for_use()
+
+# 2. Instantiate the classifier
+adf = AdaptiveRandomForest()
+
+# 3. Setup the evaluator
+eval = EvaluatePrequential(show_plot = True, pretrain_size = 100, max_instances = 10000)
+
+# 4. Run evaluation
+eval.eval(stream = stream, classifier = adf)
