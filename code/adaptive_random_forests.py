@@ -354,7 +354,7 @@ class AdaptiveRandomForest(BaseClassifier):
             self.nb_attributes = n
                                
         for i in range(self.nb_ensemble):            
-            self.ensemble[i] = self.ARFBaseLearner(i, ARFHoeffdingTree(nb_attributes = self.nb_attributes), 
+            self.ensemble[i] = ARFBaseLearner(i, ARFHoeffdingTree(nb_attributes = self.nb_attributes), 
                                               self.X_seen, 
                                               not self.disable_background_learner, 
                                               not self.disable_drift_detection,
@@ -365,99 +365,99 @@ class AdaptiveRandomForest(BaseClassifier):
     def is_randomizable():  
         return True                
             
-    class ARFBaseLearner(BaseObject):
+class ARFBaseLearner(BaseObject):
 
-        def __init__(self, index_original, classifier, X_seen, use_background_learner, use_drift_detector, 
-                     drift_detection_method, warning_detection_method, is_background_learner):            
-            self.index_original = index_original
-            self.classifier = classifier 
-            self.created_on = X_seen
-            self.use_background_learner = use_background_learner
-            self.use_drift_detector = use_drift_detector
-            self.is_background_learner = is_background_learner
-            self.drift_detection_method = warning_detection_method
-            self.warning_detection_method = warning_detection_method
+    def __init__(self, index_original, classifier, X_seen, use_background_learner, use_drift_detector, 
+                 drift_detection_method, warning_detection_method, is_background_learner):            
+        self.index_original = index_original
+        self.classifier = classifier 
+        self.created_on = X_seen
+        self.use_background_learner = use_background_learner
+        self.use_drift_detector = use_drift_detector
+        self.is_background_learner = is_background_learner
+        self.drift_detection_method = warning_detection_method
+        self.warning_detection_method = warning_detection_method
                                    
-            self.last_drift_on = 0
-            self.last_warning_on = 0
-            self.nb_drifts_detected = 0
-            self.nb_warnings_detected = 0            
+        self.last_drift_on = 0
+        self.last_warning_on = 0
+        self.nb_drifts_detected = 0
+        self.nb_warnings_detected = 0            
 
-            self.drift_detection = None
-            self.warning_detection = None
+        self.drift_detection = None
+        self.warning_detection = None
+        self.background_learner = None
+
+        if use_background_learner:
+            self.warning_detection = warning_detection_method()
+            
+        if use_drift_detector:
+            self.drift_detection = drift_detection_method()
+            
+    def reset(self, X_seen):
+        if self.use_background_learner and self.background_learner:
+            self.classifier = self.background_learner.classifier 
+            self.warning_detection = self.background_learner.warning_detection
+            self.drift_detection = self.background_learner.drift_detection
+            self.created_on = self.background_learner.created_on                
             self.background_learner = None
+        else:
+            self.classifier.reset()
+            self.created_on = X_seen
+            self.drift_detection = self.drift_detection_method()            
 
-            if use_background_learner:
-                self.warning_detection = warning_detection_method()
-            
-            if use_drift_detector:
-                self.drift_detection = drift_detection_method()
-            
-        def reset(self, X_seen):
-            if self.use_background_learner and self.background_learner:
-                self.classifier = self.background_learner.classifier 
-                self.warning_detection = self.background_learner.warning_detection
-                self.drift_detection = self.background_learner.drift_detection
-                self.created_on = self.background_learner.created_on                
-                self.background_learner = None
-            else:
-                self.classifier.reset()
-                self.created_on = X_seen
-                self.drift_detection = self.drift_detection_method()            
+    def partial_fit(self, X, y, weight, X_seen):
+        X_weighted = X.copy()
+        self.classifier.partial_fit(X_weighted, y, weight)
 
-        def partial_fit(self, X, y, weight, X_seen):
-            X_weighted = X.copy()
-            self.classifier.partial_fit(X_weighted, y, weight)
-            
-            if self.background_learner:
-                self.background_learner.classifier.partial_fit(X, y, INSTANCE_WEIGHT)
+        if self.background_learner:
+            self.background_learner.classifier.partial_fit(X, y, INSTANCE_WEIGHT)
 
-            if self.use_drift_detector and not self.is_background_learner:
-                correctly_classifies = self.classifier.predict(X) == y
-                # Check for warning only if use_background_learner is active
-                if self.use_background_learner:
-                    self.warning_detection.add_element(int(not correctly_classifies))
-                    # Check if there was a change
-                    if self.warning_detection.detected_change():
-                        self.last_warning_on = X_seen
-                        self.nb_warnings_detected += 1
-                        # Create a new background tree classifier
-                        background_learner = self.classifier.copy()
-                        background_learner.reset() 
-                        # Create a new background learner object
-                        self.background_learner = ARFBaseLearner(index_original, background_learner, 
-                                                                 X_seen, self.use_background_learner, 
-                                                                 self.use_drift_detector, self.drift_detection_method, 
-                                                                 self.warning_detection_method, True)
-                        """Update the warning detection object for the current object 
-                        (this effectively resets changes made to the object while it was still a bkg learner). 
-                        """
-                        self.warning_detection = self.drift_detection_method()
+        if self.use_drift_detector and not self.is_background_learner:
+            correctly_classifies = self.classifier.predict(X) == y
+            # Check for warning only if use_background_learner is active
+            if self.use_background_learner:
+                self.warning_detection.add_element(int(not correctly_classifies))
+                # Check if there was a change
+                if self.warning_detection.detected_change():
+                    self.last_warning_on = X_seen
+                    self.nb_warnings_detected += 1
+                    # Create a new background tree classifier
+                    background_learner = self.classifier.copy()
+                    background_learner.reset() 
+                    # Create a new background learner object
+                    self.background_learner = ARFBaseLearner(self.index_original, background_learner, 
+                                                             X_seen, self.use_background_learner, 
+                                                             self.use_drift_detector, self.drift_detection_method, 
+                                                             self.warning_detection_method, True)
+                    """Update the warning detection object for the current object 
+                    (this effectively resets changes made to the object while it was still a bkg learner). 
+                    """
+                    self.warning_detection = self.drift_detection_method()
 
-            # Update the drift detection
-            self.drift_detection.add_element(int(not correctly_classifies))
+        # Update the drift detection
+        self.drift_detection.add_element(int(not correctly_classifies))
 
-            # Check if there was a change
-            if self.drift_detection.detected_change():
-                self.last_drift_on = X_seen
-                self.nb_drifts_detected += 1
-                self.reset(X_seen)
+        # Check if there was a change
+        if self.drift_detection.detected_change():
+            self.last_drift_on = X_seen
+            self.nb_drifts_detected += 1
+            self.reset(X_seen)
 
-        def get_votes_for_instance(self, X):
-            return self.classifier.get_votes_for_instance(X)
-        
-        def get_class_type(self):
-            raise NotImplementedError
-        
-        def get_info(self):
-            raise NotImplementedError
+    def get_votes_for_instance(self, X):
+        return self.classifier.get_votes_for_instance(X)
+
+    def get_class_type(self):
+        raise NotImplementedError
+
+    def get_info(self):
+        raise NotImplementedError
 
 
 # # Tests
 
 # In[ ]:
 
-"""
+
 from skmultiflow.data.generators.waveform_generator import WaveformGenerator
 from skmultiflow.classification.trees.hoeffding_tree import HoeffdingTree
 from skmultiflow.evaluation.evaluate_prequential import EvaluatePrequential
@@ -474,5 +474,4 @@ eval = EvaluatePrequential(show_plot = True, pretrain_size = 100, max_instances 
 
 # 4. Run evaluation
 eval.eval(stream = stream, classifier = adf)
-"""
 
