@@ -5,16 +5,14 @@
 
 # ## Authors
 
-# In[ ]:
-
+# In[1]:
 
 __author__ = 'Anderson Carlos Ferreira da Silva'
 
 
 # ## Imports
 
-# In[ ]:
-
+# In[2]:
 
 import sys
 import logging
@@ -25,15 +23,15 @@ from operator import attrgetter
 from skmultiflow.core.utils.utils import *
 from skmultiflow.core.base_object import BaseObject
 from skmultiflow.classification.base import BaseClassifier
-from skmultiflow.classification.trees.hoeffding_tree import HoeffdingTree
+from skmultiflow.classification.trees.hoeffding_tree import *
 from skmultiflow.classification.core.driftdetection.adwin import ADWIN
 
 
 # ## Constants
 
-# In[ ]:
+# In[3]:
 
-
+INSTANCE_WEIGHT = np.array([1.0])
 FEATURE_MODE_M = ''
 FEATURE_MODE_SQRT = 'sqrt'
 FEATURE_MODE_SQRT_INV = 'sqrt_inv'
@@ -47,8 +45,7 @@ FEATURE_MODE_PERCENTAGE = 'percentage'
 # - [Hoeffding Tree](https://github.com/scikit-multiflow/scikit-multiflow/blob/17327dc81b7d6e35d533795ae13493ad08118708/skmultiflow/classification/trees/hoeffding_tree.py)
 # - [Adaptive Random Forest Hoeffding Tree](https://github.com/Waikato/moa/blob/f5cdc1051a7247bb61702131aec3e62b40aa82f8/moa/src/main/java/moa/classifiers/trees/ARFHoeffdingTree.java)
 
-# In[ ]:
-
+# In[4]:
 
 class ARFHoeffdingTree(HoeffdingTree):
             
@@ -62,7 +59,9 @@ class ARFHoeffdingTree(HoeffdingTree):
         def __init__(self, initial_class_observations, nb_attributes):
             super().__init__(initial_class_observations)
             self.nb_attributes = nb_attributes
-            self.list_attributes = None
+            self._is_initialized = False
+            self._attribute_observers = []
+            self.list_attributes = []         
             
         def learn_from_instance(self, X, y, weight, ht):
             """Update the node with the provided instance.
@@ -76,7 +75,13 @@ class ARFHoeffdingTree(HoeffdingTree):
                 Instance weight.
             ht: HoeffdingTree
                 Hoeffding Tree to update.
-            """            
+            """   
+            if not self._is_initialized:
+                self._attribute_observers = [None] * len(X)                
+                self._is_initialized = True
+            if y not in self._observed_class_distribution:
+                self._observed_class_distribution[y] = 0.0            
+            
             self._observed_class_distribution[y] += weight                            
             if not self.list_attributes:
                 self.list_attributes = [None] * self.nb_attributes
@@ -189,13 +194,16 @@ class ARFHoeffdingTree(HoeffdingTree):
         self.nb_attributes = nb_attributes
         self.remove_poor_attributes_option = None        
 
-    def _new_learning_node(self, initial_class_observations):        
+    def _new_learning_node(self, initial_class_observations = None):   
+        """Create a new learning node. The type of learning node depends on the tree configuration."""
+        if initial_class_observations is None:
+            initial_class_observations = {}        
         if self._leaf_prediction == MAJORITY_CLASS:
-            return RandomLearningNode(self, initialClassObservations, self.nb_attributes)            
+            return self.RandomLearningNode(initial_class_observations, self.nb_attributes)            
         elif self._leaf_prediction == NAIVE_BAYES:
-            return LearningNodeNB(self, initialClassObservations, self.nb_attributes)            
+            return self.LearningNodeNB(initial_class_observations, self.nb_attributes)            
         else: #NAIVE_BAYES_ADAPTIVE
-            return LearningNodeNBAdaptative(self, initialClassObservations, self.nb_attributes)
+            return self.LearningNodeNBAdaptative(initial_class_observations, self.nb_attributes)
         
     def is_randomizable():  
         return True
@@ -205,8 +213,7 @@ class ARFHoeffdingTree(HoeffdingTree):
 
 # - [Adaptive Random Forest](https://github.com/Waikato/moa/blob/master/moa/src/main/java/moa/classifiers/meta/AdaptiveRandomForest.java)
 
-# In[ ]:
-
+# In[5]:
 
 class AdaptiveRandomForest(BaseClassifier):
     
@@ -237,7 +244,7 @@ class AdaptiveRandomForest(BaseClassifier):
     def partial_fit(self, X, y, classes = None, weight = None):
         if y is not None:
             if weight is None:
-                weight = np.array([1.0])
+                weight = INSTANCE_WEIGHT
             row_cnt, _ = get_dimensions(X)
             wrow_cnt, _ = get_dimensions(weight)
             if row_cnt != wrow_cnt:
@@ -257,7 +264,7 @@ class AdaptiveRandomForest(BaseClassifier):
             vote = self.ensemble[i].get_votes_for_instance(X)
             k = np.random.poisson(self.w)
             if k > 0:
-                self.ensemble[i].partial_fit(X, y, k, self.X_seen)            
+                self.ensemble[i].partial_fit(np.asarray([X]), np.asarray([y]), np.asarray([k]), self.X_seen)            
     
     def predict(self, X):
         """Predicts the label of the X instance(s)
@@ -401,13 +408,12 @@ class AdaptiveRandomForest(BaseClassifier):
                 self.background_learner.classifier.partial_fit(X, y, INSTANCE_WEIGHT)
 
             if self.use_drift_detector and not self.is_background_learner:
-                votes = self.background_learner.classifier.get_votes_for_instance(X)
-                correctly_classifies = max(votes, key=votes.get) == y
+                correctly_classifies = self.classifier.predict(X) == y
                 # Check for warning only if use_background_learner is active
                 if self.use_background_learner:
-                    self.warning_detection_method.add_element(not correctly_classifies)
+                    self.warning_detection.add_element(int(not correctly_classifies))
                     # Check if there was a change
-                    if self.warning_detection_method.detected_change():
+                    if self.warning_detection.detected_change():
                         self.last_warning_on = X_seen
                         self.nb_warnings_detected += 1
                         # Create a new background tree classifier
@@ -424,7 +430,7 @@ class AdaptiveRandomForest(BaseClassifier):
                         self.warning_detection = self.drift_detection_method()
 
             # Update the drift detection
-            self.drift_detection_method.add_element(not correctly_classifies)
+            self.drift_detection.add_element(int(not correctly_classifies))
 
             # Check if there was a change
             if self.drift_detection.detected_change():
@@ -444,8 +450,7 @@ class AdaptiveRandomForest(BaseClassifier):
 
 # # Tests
 
-# In[ ]:
-
+# In[6]:
 
 from skmultiflow.data.generators.waveform_generator import WaveformGenerator
 from skmultiflow.classification.trees.hoeffding_tree import HoeffdingTree
