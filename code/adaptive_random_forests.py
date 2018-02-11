@@ -33,7 +33,6 @@ from skmultiflow.classification.core.driftdetection.adwin import ADWIN
 # In[3]:
 
 
-INSTANCE_WEIGHT = 1
 FEATURE_MODE_M = ''
 FEATURE_MODE_SQRT = 'sqrt'
 FEATURE_MODE_SQRT_INV = 'sqrt_inv'
@@ -61,7 +60,7 @@ class ARFHoeffdingTree(HoeffdingTree):
         """
         def __init__(self, initial_class_observations, nb_attributes):
             super().__init__(initial_class_observations)
-            self.nb_attributes = nb_attributes;
+            self.nb_attributes = nb_attributes
             self.list_attributes = None
             
         def learn_from_instance(self, X, y, weight, ht):
@@ -210,9 +209,10 @@ class ARFHoeffdingTree(HoeffdingTree):
 
 class AdaptiveRandomForest(BaseClassifier):
     
-    def __init__(self, nb_ensemble = 10, feature_mode = 'sqrt', nb_attributes = 2, disable_background_learner = False, 
-                 disable_drift_detection = False, disable_weighted_vote = False, w = 6,
-                 drift_detection_method = ADWIN, warning_detection_method = ADWIN):
+    def __init__(self, nb_ensemble = 10, feature_mode = 'sqrt', nb_attributes = 2, 
+                 disable_background_learner = False, disable_drift_detection = False, 
+                 disable_weighted_vote = False, w = 6, drift_detection_method = ADWIN, 
+                 warning_detection_method = ADWIN):
         
         """AdaptiveRandomForest class constructor."""
         super().__init__()          
@@ -226,6 +226,7 @@ class AdaptiveRandomForest(BaseClassifier):
         self.drift_detection_method = drift_detection_method
         self.warning_detection_method = warning_detection_method
         self.X_seen = 0   
+        self._train_weight_seen_by_model = 0.0
         self.nb_attributes = None
         self.ensemble = None              
 
@@ -233,6 +234,19 @@ class AdaptiveRandomForest(BaseClassifier):
         raise NotImplementedError
     
     def partial_fit(self, X, y, classes = None, weight = None):
+        if y is not None:
+            if weight is None:
+                weight = np.array([1.0])
+            row_cnt, _ = get_dimensions(X)
+            wrow_cnt, _ = get_dimensions(weight)
+            if row_cnt != wrow_cnt:
+                weight = [weight[0]] * row_cnt
+            for i in range(row_cnt):
+                if weight[i] != 0.0:
+                    self._train_weight_seen_by_model += weight[i]
+                    self._partial_fit(X[i], y[i], weight[i])
+        
+    def _partial_fit(self, X, y, weight):
         self.X_seen += 1
         
         if not self.ensemble:
@@ -271,9 +285,10 @@ class AdaptiveRandomForest(BaseClassifier):
         
     def reset(self):        
         """Reset attributes."""
-        self.ensemble = None;
-        self.nb_attributes = 0;
-        self.X_seen = 0;
+        self.ensemble = None
+        self.nb_attributes = 0
+        self.X_seen = 0
+        self._train_weight_seen_by_model = 0.0
         
     def score(self, X, y):
         raise NotImplementedError
@@ -323,7 +338,7 @@ class AdaptiveRandomForest(BaseClassifier):
             self.nb_attributes = 1
         """m > n, then it should use n"""
         if self.nb_attributes > n:
-            self.nb_attributes = n;
+            self.nb_attributes = n
                                
         for i in range(self.nb_ensemble):            
             self.ensemble[i] = ARFBaseLearner(i, ARFHoeffdingTree(nb_attributes = self.nb_attributes), 
@@ -379,7 +394,7 @@ class AdaptiveRandomForest(BaseClassifier):
 
         def partial_fit(self, X, y, weight, X_seen):
             X_weighted = X.copy()
-            self.classifier.partial_fit(X_weighted, y, INSTANCE_WEIGHT * weight)
+            self.classifier.partial_fit(X_weighted, y, weight)
             
             if self.background_learner:
                 self.background_learner.classifier.partial_fit(X, y, INSTANCE_WEIGHT)
