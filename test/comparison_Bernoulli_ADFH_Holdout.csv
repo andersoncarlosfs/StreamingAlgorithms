@@ -1,5 +1,0 @@
-# SETUP BEGIN
-# File Stream: file_name: ../datasets/covtype.csv  -  num_classes: 7  -  num_classification_tasks: 1
-# EvaluateHoldout: n_wait: 10000 - max_instances: 100000 - max_time: 1000 - output_file: comparison_Bernoulli_ADFH_Holdout.csv - batch_size: 1 - pretrain_size: 200 - test_size: 5000 - task_type: classification - show_plotFalse - plot_options: ['kappa', 'performance'] - dynamic_test_set: True
-# SETUP END
-x_count,global_performance_0,sliding_window_performance_0,global_performance_1,sliding_window_performance_1,global_kappa_0,sliding_window_kappa_0,global_kappa_1,sliding_window_kappa_1
