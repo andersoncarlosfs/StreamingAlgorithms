@@ -5,14 +5,14 @@
 
 # ## Authors
 
-# In[1]:
+# In[ ]:
 
 __author__ = 'Anderson Carlos Ferreira da Silva'
 
 
 # ## Imports
 
-# In[2]:
+# In[ ]:
 
 import sys
 import logging
@@ -29,7 +29,7 @@ from skmultiflow.classification.core.driftdetection.adwin import ADWIN
 
 # ## Constants
 
-# In[3]:
+# In[ ]:
 
 INSTANCE_WEIGHT = np.array([1.0])
 FEATURE_MODE_M = ''
@@ -45,7 +45,7 @@ FEATURE_MODE_PERCENTAGE = 'percentage'
 # - [Hoeffding Tree](https://github.com/scikit-multiflow/scikit-multiflow/blob/17327dc81b7d6e35d533795ae13493ad08118708/skmultiflow/classification/trees/hoeffding_tree.py)
 # - [Adaptive Random Forest Hoeffding Tree](https://github.com/Waikato/moa/blob/f5cdc1051a7247bb61702131aec3e62b40aa82f8/moa/src/main/java/moa/classifiers/trees/ARFHoeffdingTree.java)
 
-# In[4]:
+# In[ ]:
 
 class ARFHoeffdingTree(HoeffdingTree):
             
@@ -213,7 +213,7 @@ class ARFHoeffdingTree(HoeffdingTree):
 
 # - [Adaptive Random Forest](https://github.com/Waikato/moa/blob/master/moa/src/main/java/moa/classifiers/meta/AdaptiveRandomForest.java)
 
-# In[5]:
+# In[ ]:
 
 class AdaptiveRandomForest(BaseClassifier):
     
@@ -285,7 +285,12 @@ class AdaptiveRandomForest(BaseClassifier):
                 # Tree is empty, all classes equal, default to zero
                 predictions.append(0)
             else:
-                predictions.append(max(votes, key = votes.get))
+                predict = []                
+                for vote in votes:                                        
+                    predict.append(max(vote, key = vote.get))            
+                y, counts = np.unique(predict, return_counts = True)
+                value = np.argmax(counts)                
+                predictions.append(y[value])                
         return predictions
 
     def predict_proba(self, X):
@@ -450,7 +455,7 @@ class AdaptiveRandomForest(BaseClassifier):
 
 # # Tests
 
-# In[6]:
+# In[ ]:
 
 from skmultiflow.data.generators.waveform_generator import WaveformGenerator
 from skmultiflow.classification.trees.hoeffding_tree import HoeffdingTree
