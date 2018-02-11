@@ -25,6 +25,7 @@ from skmultiflow.core.base_object import BaseObject
 from skmultiflow.classification.base import BaseClassifier
 from skmultiflow.classification.trees.hoeffding_tree import *
 from skmultiflow.classification.core.driftdetection.adwin import ADWIN
+from joblib import Parallel, delayed
 
 
 # ## Constants
@@ -47,6 +48,16 @@ FEATURE_MODE_PERCENTAGE = 'percentage'
 # - [Adaptive Random Forest Hoeffding Tree](https://github.com/Waikato/moa/blob/f5cdc1051a7247bb61702131aec3e62b40aa82f8/moa/src/main/java/moa/classifiers/trees/ARFHoeffdingTree.java)
 
 # In[ ]:
+
+def attribute_observers(i, list_attributes, _attribute_observers, X, y, weight, ht):    
+    obs = _attribute_observers[i]
+    if obs is None:
+        if i in ht.nominal_attributes:
+            obs = NominalAttributeClassObserver()
+        else:
+            obs = GaussianNumericAttributeClassObserver()
+        _attribute_observers[i] = obs
+    obs.observe_attribute_class(X[i], int(y), weight)
 
 class ARFHoeffdingTree(HoeffdingTree):
             
@@ -92,6 +103,9 @@ class ARFHoeffdingTree(HoeffdingTree):
                                 is_unique = False
                                 break
             
+            Parallel(n_jobs = -1)(delayed(attribute_observers)(self.list_attributes[j], self._attribute_observers,
+                                                               X, y, weight, ht) for j in range(self.nb_attributes))
+            """
             for j in range(self.nb_attributes):
                 i = self.list_attributes[j]
                 obs = self._attribute_observers[i]
@@ -102,6 +116,7 @@ class ARFHoeffdingTree(HoeffdingTree):
                         obs = GaussianNumericAttributeClassObserver()
                     self._attribute_observers[i] = obs
                 obs.observe_attribute_class(X[i], int(y), weight)
+            """
             
     class LearningNodeNB(RandomLearningNode):
 
@@ -307,7 +322,7 @@ class AdaptiveRandomForest(BaseClassifier):
         raise NotImplementedError
         
     def get_info(self):
-        raise NotImplementedError
+        return "NotImplementedError"
         
     def get_votes_for_instance(self, X):
         test = X.copy()
@@ -450,7 +465,7 @@ class ARFBaseLearner(BaseObject):
         raise NotImplementedError
 
     def get_info(self):
-        raise NotImplementedError
+        return "NotImplementedError"
 
 
 # # Tests
