@@ -204,6 +204,9 @@ class ARFHoeffdingTree(HoeffdingTree):
         
     def is_randomizable():  
         return True
+    
+    def copy(self):
+        return ARFHoeffdingTree(nb_attributes = self.nb_attributes)
 
 
 # ## Adaptive Random Forest
