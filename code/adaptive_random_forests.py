@@ -31,6 +31,7 @@ from skmultiflow.classification.core.driftdetection.adwin import ADWIN
 
 # In[ ]:
 
+POISSON_SIZE = 1
 INSTANCE_WEIGHT = np.array([1.0])
 FEATURE_MODE_M = ''
 FEATURE_MODE_SQRT = 'sqrt'
@@ -258,7 +259,7 @@ class AdaptiveRandomForest(BaseClassifier):
                       
         for i in range(self.nb_ensemble):
             vote = self.ensemble[i].get_votes_for_instance(X)
-            k = np.random.poisson(self.w, INSTANCE_WEIGHT)
+            k = np.random.poisson(self.w, POISSON_SIZE)
             if k > 0:
                 self.ensemble[i].partial_fit(np.asarray([X]), np.asarray([y]), np.asarray([k]), self.X_seen)            
     
