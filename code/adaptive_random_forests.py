@@ -5,7 +5,7 @@
 
 # ## Authors
 
-# In[1]:
+# In[ ]:
 
 
 __author__ = 'Anderson Carlos Ferreira da Silva'
@@ -13,11 +13,12 @@ __author__ = 'Anderson Carlos Ferreira da Silva'
 
 # ## Imports
 
-# In[2]:
+# In[ ]:
 
 
 import sys
 import logging
+import math
 import numpy as np
 from random import randint
 from operator import attrgetter
@@ -30,7 +31,7 @@ from skmultiflow.classification.core.driftdetection.adwin import ADWIN
 
 # ## Constants
 
-# In[3]:
+# In[ ]:
 
 
 FEATURE_MODE_M = ''
@@ -46,7 +47,7 @@ FEATURE_MODE_PERCENTAGE = 'percentage'
 # - [Hoeffding Tree](https://github.com/scikit-multiflow/scikit-multiflow/blob/17327dc81b7d6e35d533795ae13493ad08118708/skmultiflow/classification/trees/hoeffding_tree.py)
 # - [Adaptive Random Forest Hoeffding Tree](https://github.com/Waikato/moa/blob/f5cdc1051a7247bb61702131aec3e62b40aa82f8/moa/src/main/java/moa/classifiers/trees/ARFHoeffdingTree.java)
 
-# In[4]:
+# In[ ]:
 
 
 class ARFHoeffdingTree(HoeffdingTree):
@@ -204,7 +205,7 @@ class ARFHoeffdingTree(HoeffdingTree):
 
 # - [Adaptive Random Forest](https://github.com/Waikato/moa/blob/master/moa/src/main/java/moa/classifiers/meta/AdaptiveRandomForest.java)
 
-# In[5]:
+# In[ ]:
 
 
 class AdaptiveRandomForest(BaseClassifier):
@@ -341,7 +342,7 @@ class AdaptiveRandomForest(BaseClassifier):
             self.nb_attributes = n
                                
         for i in range(self.nb_ensemble):            
-            self.ensemble[i] = ARFBaseLearner(i, ARFHoeffdingTree(nb_attributes = self.nb_attributes), 
+            self.ensemble[i] = self.ARFBaseLearner(i, ARFHoeffdingTree(nb_attributes = self.nb_attributes), 
                                               self.X_seen, 
                                               not self.disable_background_learner, 
                                               not self.disable_drift_detection,
@@ -377,7 +378,7 @@ class AdaptiveRandomForest(BaseClassifier):
             if use_background_learner:
                 self.warning_detection = warning_detection_method()
             
-            if use_drift_detection:
+            if use_drift_detector:
                 self.drift_detection = drift_detection_method()
             
         def reset(self, X_seen):
@@ -433,6 +434,18 @@ class AdaptiveRandomForest(BaseClassifier):
 
         def get_votes_for_instance(self, X):
             return self.classifier.get_votes_for_instance(X)
+        
+        def get_class_type(self):
+            raise NotImplementedError
+        
+        def get_info(self):
+            raise NotImplementedError
+
+
+# # Tests
+
+# In[ ]:
+
 
 from skmultiflow.data.generators.waveform_generator import WaveformGenerator
 from skmultiflow.classification.trees.hoeffding_tree import HoeffdingTree
@@ -450,3 +463,4 @@ eval = EvaluatePrequential(show_plot = True, pretrain_size = 100, max_instances 
 
 # 4. Run evaluation
 eval.eval(stream = stream, classifier = adf)
+
