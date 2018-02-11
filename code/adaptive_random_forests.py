@@ -59,8 +59,7 @@ class ARFHoeffdingTree(HoeffdingTree):
         def __init__(self, initial_class_observations, nb_attributes):
             super().__init__(initial_class_observations)
             self.nb_attributes = nb_attributes
-            self._is_initialized = False
-            self._attribute_observers = []
+            self._attribute_observers = [None] * nb_attributes
             self.list_attributes = []         
             
         def learn_from_instance(self, X, y, weight, ht):
@@ -76,9 +75,6 @@ class ARFHoeffdingTree(HoeffdingTree):
             ht: HoeffdingTree
                 Hoeffding Tree to update.
             """   
-            if not self._is_initialized:
-                self._attribute_observers = [None] * len(X)                
-                self._is_initialized = True
             if y not in self._observed_class_distribution:
                 self._observed_class_distribution[y] = 0.0            
             
