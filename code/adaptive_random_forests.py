@@ -101,7 +101,7 @@ class ARFHoeffdingTree(HoeffdingTree):
                     else:
                         obs = GaussianNumericAttributeClassObserver()
                     self._attribute_observers[i] = obs
-            obs.observe_attribute_class(X[i], int(y), weight)
+                obs.observe_attribute_class(X[i], int(y), weight)
             
     class LearningNodeNB(RandomLearningNode):
 
@@ -457,7 +457,7 @@ class ARFBaseLearner(BaseObject):
 
 # In[ ]:
 
-
+"""
 from skmultiflow.data.generators.waveform_generator import WaveformGenerator
 from skmultiflow.classification.trees.hoeffding_tree import HoeffdingTree
 from skmultiflow.evaluation.evaluate_prequential import EvaluatePrequential
@@ -474,4 +474,5 @@ eval = EvaluatePrequential(show_plot = True, pretrain_size = 100, max_instances 
 
 # 4. Run evaluation
 eval.eval(stream = stream, classifier = adf)
+"""
 
