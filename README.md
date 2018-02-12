@@ -16,11 +16,8 @@ https://docs.google.com/presentation/d/1ZUxHXb0-eJTDY5Auf_MVcjrwU0FI5jcnGCYjrI8T
 # Summary
 
 ## Evaluation
-Compare the regular Hoeffding Tree against Adaptive Random Forest
 
 ### Tests
-Run Adaptive Random Forest on 2 or 3 datasets to properly illustrate the reuslts of the implementation. The datatsets availables:
-- https://github.com/scikit-multiflow/scikit-multiflow/tree/master/skmultiflow/datasets
 
 ## Presentation
 To do!
