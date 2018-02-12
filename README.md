@@ -20,7 +20,6 @@ https://docs.google.com/presentation/d/1ZUxHXb0-eJTDY5Auf_MVcjrwU0FI5jcnGCYjrI8T
 ### Tests
 
 ## Presentation
-To do!
 
 ## More
 Optimisations: 
